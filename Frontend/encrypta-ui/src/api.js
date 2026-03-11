@@ -1,13 +1,22 @@
-
-import axios from "axios";
+import axios from 'axios';
 
 const API = axios.create({
- baseURL:"http://localhost:8080/api"
+  baseURL: 'http://localhost:8080/api',
+  withCredentials: true,
 });
 
-export const registerUser=(data)=>API.post("/users/register",data);
-export const loginUser=(data)=>API.post("/users/login",data);
+// Attach userId header to every request if logged in
+API.interceptors.request.use((config) => {
+  const userId = localStorage.getItem('userId');
+  if (userId) config.headers['X-User-Id'] = userId;
+  return config;
+});
 
-export const addPassword=(data)=>API.post("/passwords",data);
-export const getPasswords=(userId)=>API.get(`/passwords/user/${userId}`);
-export const deletePassword=(id)=>API.delete(`/passwords/${id}`);
+// ── Auth ────────────────────────────────────────
+export const registerUser = (data) => API.post('/users/register', data);
+export const loginUser    = (data) => API.post('/users/login', data);
+
+// ── Passwords ───────────────────────────────────
+export const addPassword        = (data)   => API.post('/passwords', data);
+export const getPasswordsByUser = (userId) => API.get(`/passwords/user/${userId}`);
+export const deletePassword     = (id)     => API.delete(`/passwords/${id}`);
