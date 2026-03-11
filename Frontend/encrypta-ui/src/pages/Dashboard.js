@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   RiAddLine, RiSearchLine, RiShieldCheckLine,
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [search,  setSearch]  = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const navigate = useNavigate();
 
   // Add form state
   const [website,  setWebsite]  = useState('');
@@ -46,7 +48,7 @@ export default function Dashboard() {
   const loadPasswords = useCallback(async () => {
     try {
       const res = await getPasswordsByUser(userId);
-      setList(res.data);
+      setList(Array.isArray(res.data) ? res.data : []);
     } catch {
       toast.error('Could not load passwords. Is the backend running?');
     } finally {
@@ -54,7 +56,13 @@ export default function Dashboard() {
     }
   }, [userId]);
 
-  useEffect(() => { loadPasswords(); }, [loadPasswords]);
+  useEffect(() => { 
+    if (!userId) {
+      navigate('/');
+    } else {
+      loadPasswords(); 
+    }
+  }, [userId, loadPasswords, navigate]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -77,7 +85,9 @@ export default function Dashboard() {
     setList(prev => prev.filter(p => p.entryId !== id));
   };
 
-  const filtered = list.filter(p =>
+  const safeList = Array.isArray(list) ? list : [];
+
+  const filtered = safeList.filter(p =>
     (p.website  || '').toLowerCase().includes(search.toLowerCase()) ||
     (p.username || '').toLowerCase().includes(search.toLowerCase())
   );
@@ -93,14 +103,14 @@ export default function Dashboard() {
           <div className="stat-card">
             <div className="stat-icon purple"><RiShieldCheckLine /></div>
             <div className="stat-info">
-              <div className="stat-num">{list.length}</div>
+              <div className="stat-num">{safeList.length}</div>
               <div className="stat-lbl">Total Passwords</div>
             </div>
           </div>
           <div className="stat-card">
             <div className="stat-icon pink"><RiGlobalLine /></div>
             <div className="stat-info">
-              <div className="stat-num">{new Set(list.map(p => p.website?.split('.')[0])).size}</div>
+              <div className="stat-num">{new Set(safeList.map(p => p.website?.split('.')[0])).size}</div>
               <div className="stat-lbl">Unique Sites</div>
             </div>
           </div>
@@ -195,7 +205,7 @@ export default function Dashboard() {
           ) : filtered.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">🔐</div>
-              {list.length === 0
+              {safeList.length === 0
                 ? <><h3>Your vault is empty</h3><p>Click "Add Password" to store your first entry.</p></>
                 : <><h3>No results found</h3><p>Try a different search term.</p></>
               }

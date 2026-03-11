@@ -20,6 +20,7 @@ public class PasswordEntry {
     private String password;
 
     // FOREIGN KEY
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

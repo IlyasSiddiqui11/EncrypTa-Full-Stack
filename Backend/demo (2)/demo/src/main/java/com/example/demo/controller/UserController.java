@@ -16,8 +16,12 @@ public class UserController {
     private UserService service;
 
     @PostMapping("/register")
-    public String register(@RequestBody User user){
-        return service.register(user);
+    public ResponseEntity<?> register(@RequestBody User user){
+        String result = service.register(user);
+        if ("User already exist".equals(result)) {
+            return ResponseEntity.badRequest().body(result);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/login")

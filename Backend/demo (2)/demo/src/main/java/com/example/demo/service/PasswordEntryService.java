@@ -21,10 +21,8 @@ public class PasswordEntryService {
 
         PasswordEntry saved = repository.save(entry);
 
-        // decrypt before sending to frontend
-        saved.setPassword(AESUtil.decrypt(saved.getPassword()));
-
-        return saved;
+        // decrypt before sending to frontend without dirty-checking
+        return new PasswordEntry(saved.getEntryId(), saved.getWebsite(), saved.getUsername(), AESUtil.decrypt(saved.getPassword()), saved.getUser());
     }
 
 
@@ -32,12 +30,7 @@ public class PasswordEntryService {
 
         List<PasswordEntry> list = repository.findAll();
 
-        for(PasswordEntry entry : list){
-            String decrypted = AESUtil.decrypt(entry.getPassword());
-            entry.setPassword(decrypted);
-        }
-
-        return list;
+        return list.stream().map(entry -> new PasswordEntry(entry.getEntryId(), entry.getWebsite(), entry.getUsername(), AESUtil.decrypt(entry.getPassword()), entry.getUser())).collect(java.util.stream.Collectors.toList());
     }
 
     public void deletePassword(Long id){
@@ -59,9 +52,7 @@ public class PasswordEntryService {
             PasswordEntry saved = repository.save(entry);
 
             // decrypt before returning
-            saved.setPassword(AESUtil.decrypt(saved.getPassword()));
-
-            return saved;
+            return new PasswordEntry(saved.getEntryId(), saved.getWebsite(), saved.getUsername(), AESUtil.decrypt(saved.getPassword()), saved.getUser());
         }
 
         return null;
@@ -72,11 +63,6 @@ public class PasswordEntryService {
 
         List<PasswordEntry> entries = repository.findByUserId(userId);
 
-        for(PasswordEntry entry : entries){
-            String decrypted = AESUtil.decrypt(entry.getPassword());
-            entry.setPassword(decrypted);
-        }
-
-        return entries;
+        return entries.stream().map(entry -> new PasswordEntry(entry.getEntryId(), entry.getWebsite(), entry.getUsername(), AESUtil.decrypt(entry.getPassword()), entry.getUser())).collect(java.util.stream.Collectors.toList());
     }
 }

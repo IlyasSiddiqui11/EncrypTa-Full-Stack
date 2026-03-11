@@ -30,7 +30,7 @@ public class AESUtil {
             byte[] decoded = Base64.getDecoder().decode(strToDecrypt);
             return new String(cipher.doFinal(decoded));
         } catch (Exception e) {
-            throw new RuntimeException("Error while decrypting");
+            return strToDecrypt;
         }
     }
 }
