@@ -8,32 +8,34 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin(
-        origins = "http://127.0.0.1:3000",
-        allowedHeaders = "*",
-        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS},
-        allowCredentials = "true"
-)
 @RequestMapping("/api/passwords")
+@CrossOrigin(origins = "http://127.0.0.1:3000")
 public class PasswordEntryController {
 
     @Autowired
     private PasswordEntryService service;
 
-    @GetMapping
-    public List<PasswordEntry> getAllPasswords() {
-        return service.getAll();
-    }
-
-    // SAVE (used when clicking submit)
+    // Add new password
     @PostMapping
-    public PasswordEntry savePassword(@RequestBody PasswordEntry entry) {
-        return service.save(entry);
+    public PasswordEntry addPassword(@RequestBody PasswordEntry entry){
+        return service.addPassword(entry);
     }
 
-    // DELETE (used by delete button)
+    @GetMapping("/user/{userId}")
+    public List<PasswordEntry> getPasswordsByUser(@PathVariable Long userId){
+        return service.getPasswordsByUser(userId);
+    }
+
+    // Delete password
     @DeleteMapping("/{id}")
-    public void deletePassword(@PathVariable Long entryId) {
-        service.deleteById(entryId);
+    public String deletePassword(@PathVariable Long id){
+        service.deletePassword(id);
+        return "Deleted successfully";
+    }
+
+    // Update password
+    @PutMapping("/{id}")
+    public PasswordEntry updatePassword(@PathVariable Long id, @RequestBody PasswordEntry entry){
+        return service.updatePassword(id, entry);
     }
 }

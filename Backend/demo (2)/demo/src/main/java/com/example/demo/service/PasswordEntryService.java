@@ -1,9 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.model.PasswordEntry;
-import com.example.demo.model.User;
+import com.example.demo.util.AESUtil;
 import com.example.demo.repository.PasswordEntryRepo;
-import com.example.demo.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,28 +12,71 @@ import java.util.List;
 public class PasswordEntryService {
 
     @Autowired
-    private PasswordEntryRepo repo;
+    private PasswordEntryRepo repository;
 
-    @Autowired
-    private UserRepo userRepo;
+    public PasswordEntry addPassword(PasswordEntry entry){
 
-    public PasswordEntry save(PasswordEntry entry) {
-        return repo.save(entry);
+        String encryptedPassword = AESUtil.encrypt(entry.getPassword());
+        entry.setPassword(encryptedPassword);
+
+        PasswordEntry saved = repository.save(entry);
+
+        // decrypt before sending to frontend
+        saved.setPassword(AESUtil.decrypt(saved.getPassword()));
+
+        return saved;
     }
 
-    public List<PasswordEntry> getAll() {
-        return repo.findAll();
+
+    public List<PasswordEntry> getAllPasswords(){
+
+        List<PasswordEntry> list = repository.findAll();
+
+        for(PasswordEntry entry : list){
+            String decrypted = AESUtil.decrypt(entry.getPassword());
+            entry.setPassword(decrypted);
+        }
+
+        return list;
     }
 
-    public void deleteById(Long id) {
-        repo.deleteById(id);
+    public void deletePassword(Long id){
+        repository.deleteById(id);
     }
 
-    public PasswordEntry save(PasswordEntry entry, String username) {
-        User user = userRepo.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public PasswordEntry updatePassword(Long id, PasswordEntry updated){
 
-        entry.setUser(user); // sets FK
-        return repo.save(entry);
+        PasswordEntry entry = repository.findById(id).orElse(null);
+
+        if(entry != null){
+
+            entry.setWebsite(updated.getWebsite());
+            entry.setUsername(updated.getUsername());
+
+            String encrypted = AESUtil.encrypt(updated.getPassword());
+            entry.setPassword(encrypted);
+
+            PasswordEntry saved = repository.save(entry);
+
+            // decrypt before returning
+            saved.setPassword(AESUtil.decrypt(saved.getPassword()));
+
+            return saved;
+        }
+
+        return null;
+    }
+
+
+    public List<PasswordEntry> getPasswordsByUser(Long userId){
+
+        List<PasswordEntry> entries = repository.findByUserId(userId);
+
+        for(PasswordEntry entry : entries){
+            String decrypted = AESUtil.decrypt(entry.getPassword());
+            entry.setPassword(decrypted);
+        }
+
+        return entries;
     }
 }
